@@ -17,8 +17,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config type represents the kubeconfig yaml data
 type Config struct {
-	ApiVersion  string      `yaml:"apiVersion"`
+	APIVersion  string      `yaml:"apiVersion"`
 	Kind        string      `yaml:"kind"`
 	Preferences interface{} `yaml:"preferences"`
 	Users       []struct {
@@ -44,6 +45,8 @@ type Config struct {
 	} `yaml:"contexts"`
 }
 
+// LoadPrivateKeyFromFile loads an rsa private key
+// from file referred to by path
 func LoadPrivateKeyFromFile(path string) (*rsa.PrivateKey, error) {
 	p, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -57,6 +60,8 @@ func LoadPrivateKeyFromFile(path string) (*rsa.PrivateKey, error) {
 	return privkey, nil
 }
 
+// LoadPublicCertFromFile loads an x509 certificate from
+// file referred to by path
 func LoadPublicCertFromFile(path string) (*x509.Certificate, error) {
 	cert := &x509.Certificate{}
 	p, err := ioutil.ReadFile(path)
@@ -71,6 +76,8 @@ func LoadPublicCertFromFile(path string) (*x509.Certificate, error) {
 	return cert, nil
 }
 
+// LoadKubeConfig loads data from a kubeconfig file
+// and returns a Config that represents it
 func LoadKubeConfig(path string) (Config, error) {
 	c := Config{}
 	dat, err := ioutil.ReadFile(
@@ -86,6 +93,8 @@ func LoadKubeConfig(path string) (Config, error) {
 	return c, nil
 }
 
+// BuildCSRTemplateFromCert builds a CSR template based
+// on the x509 cert passed to it
 func BuildCSRTemplateFromCert(crt x509.Certificate) x509.CertificateRequest {
 	return x509.CertificateRequest{
 		Subject:            crt.Subject,
@@ -100,6 +109,8 @@ func BuildCSRTemplateFromCert(crt x509.Certificate) x509.CertificateRequest {
 	}
 }
 
+// BuildCRTTemplateFromCert builds an x509 certificate template from the
+// x509 certificate request poassed to it + an expiry date of "expire" months from now
 func BuildCRTTemplateFromCert(crt x509.CertificateRequest, expire int) x509.Certificate {
 	return x509.Certificate{
 		SignatureAlgorithm: x509.SHA512WithRSA,
@@ -116,6 +127,7 @@ func BuildCRTTemplateFromCert(crt x509.CertificateRequest, expire int) x509.Cert
 	}
 }
 
+// CreateCSR returns an x509 CSR from the private key and template passed in
 func CreateCSR(template x509.CertificateRequest, key *rsa.PrivateKey) (*x509.CertificateRequest, error) {
 	req := x509.CertificateRequest{}
 	csrCertificate, err := x509.CreateCertificateRequest(rand.Reader, &template, key)
@@ -128,18 +140,21 @@ func CreateCSR(template x509.CertificateRequest, key *rsa.PrivateKey) (*x509.Cer
 	return x509.ParseCertificateRequest(rest)
 }
 
+// GetClientKey returns the rsa privatekey from a Config
 func GetClientKey(c Config) (*rsa.PrivateKey, error) {
 	uDec, _ := b64.URLEncoding.DecodeString(c.Users[0].User.ClientKeyData)
 	block, _ := pem.Decode(uDec)
 	return x509.ParsePKCS1PrivateKey(block.Bytes)
 }
 
+// GetClientCert returns the x509 certificate from a Config
 func GetClientCert(c Config) (*x509.Certificate, error) {
 	uDec, _ := b64.URLEncoding.DecodeString(c.Users[0].User.ClientCertificateData)
 	block, _ := pem.Decode(uDec)
 	return x509.ParseCertificate(block.Bytes)
 }
 
+// WriteConfigToFile writes a Config to path as yaml
 func WriteConfigToFile(path string, c Config) error {
 	yamlout, err := os.Create(path)
 	defer yamlout.Close()
@@ -158,6 +173,8 @@ func WriteConfigToFile(path string, c Config) error {
 
 }
 
+// UpdateClientCertConfig updates the ClientCertificateData in Config
+// using the raw x509 as byte[]
 func UpdateClientCertConfig(c Config, bytes []byte) Config {
 
 	block := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: bytes})
