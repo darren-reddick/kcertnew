@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 NAME HERE dreddick.home@gmail.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,7 +31,14 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cr.Renew("controller-manager.conf", "testdata", "controller-manager.conf", 1)
+		kubeconfig, _ := cmd.Flags().GetString("kubeconfig")
+		expire, _ := cmd.Flags().GetInt("expire")
+		root, _ := cmd.Flags().GetString("root")
+		output := kubeconfig
+		if o, _ := cmd.Flags().GetString("output"); o != "" {
+			output = o
+		}
+		cr.Renew(kubeconfig, root, output, expire)
 	},
 }
 
@@ -47,4 +54,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	renewCmd.Flags().String("kubeconfig", "kubelet.conf", "The name of the kubeconfig file to renew certs in")
+	renewCmd.Flags().String("output", "", "The name of the output file to write config to. Defaults to name of kubeconfig file.")
+	renewCmd.Flags().String("root", ".", "The root directory under which the path to the k8s config can be found at etc/kubernetes")
+	renewCmd.Flags().Int("expire", 12, "The number of months to set the certificate to expire in")
 }
