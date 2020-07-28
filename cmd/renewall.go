@@ -32,13 +32,8 @@ A filesystem root can be set and the command expects the root ca key and cert to
 
 This command will renew the client cert for a named kubeconfig file and store the new config in a new location.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//kubeconfig, _ := cmd.Flags().GetString("kubeconfig")
 		expire, _ := cmd.Flags().GetInt("expire")
 		root, _ := cmd.Flags().GetString("root")
-		/* 		output := kubeconfig
-		   		if o, _ := cmd.Flags().GetString("output"); o != "" {
-		   			output = o
-		   		} */
 		cr.RenewKubeconfigs(root, expire)
 	},
 }

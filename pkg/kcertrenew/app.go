@@ -7,6 +7,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -156,6 +157,9 @@ func GetClientCert(c Config) (*x509.Certificate, error) {
 
 // WriteConfigToFile writes a Config to path as yaml
 func WriteConfigToFile(path string, c Config) error {
+	if _, err := os.Stat(path); err == nil {
+		return fmt.Errorf("File exists: %s", path)
+	}
 	yamlout, err := os.Create(path)
 	defer yamlout.Close()
 	if err != nil {

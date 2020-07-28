@@ -71,16 +71,19 @@ func RenewKubeconfig(kubeconfig string, root string, output string, expire int) 
 
 	// Write the updated Config to yaml file
 	log.Printf("Writing updated kubeconfig to %s", output)
-	WriteConfigToFile(output, c)
+	check(WriteConfigToFile(output, c))
 
 }
 
+// RenewKubeconfigs renews the client cert data of all kubeconfig files found in a directory
+// by generating a CSR from the expiring cert and signing with the root ca.
 func RenewKubeconfigs(root string, expire int) {
 	kBase := path.Join(root, "/etc/kubernetes")
 	files, err := ioutil.ReadDir(kBase)
 	if err != nil {
 		log.Fatal(err)
 	}
+	// all files must end in '.conf'
 	re := regexp.MustCompile(`^[\w-]+\.conf$`)
 	cfiles := []string{}
 	for _, val := range files {
