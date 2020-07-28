@@ -23,13 +23,14 @@ import (
 // renewCmd represents the renew command
 var renewCmd = &cobra.Command{
 	Use:   "renew",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Renew the public cert in a kubeconfig file.",
+	Long: `Command to renew the public cert for a user in a kubeconfig file.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+The public cert data is stored base64 encoded in the users[].user.client-certificate-data field.
+
+A filesystem root can be set and the command expects the root ca key and cert to be available under the root at /etc/kubernetes/pki 
+
+This command will renew the client cert for a named kubeconfig file and store the new config in a new location.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		kubeconfig, _ := cmd.Flags().GetString("kubeconfig")
 		expire, _ := cmd.Flags().GetInt("expire")
@@ -38,7 +39,7 @@ to quickly create a Cobra application.`,
 		if o, _ := cmd.Flags().GetString("output"); o != "" {
 			output = o
 		}
-		cr.Renew(kubeconfig, root, output, expire)
+		cr.RenewKubeconfig(kubeconfig, root, output, expire)
 	},
 }
 

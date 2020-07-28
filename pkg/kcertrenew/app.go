@@ -33,8 +33,8 @@ type Config struct {
 		Cluster struct {
 			CertificateAuthorityData string `yaml:"certificate-authority-data"`
 			Server                   string `yaml:"server"`
-			Name                     string `yaml:"name"`
 		} `yaml:"cluster"`
+		Name string `yaml:"name"`
 	}
 	Contexts []struct {
 		Context struct {
