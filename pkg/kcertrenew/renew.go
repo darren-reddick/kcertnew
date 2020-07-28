@@ -71,7 +71,10 @@ func RenewKubeconfig(kubeconfig string, root string, output string, expire int) 
 
 	// Write the updated Config to yaml file
 	log.Printf("Writing updated kubeconfig to %s", output)
-	check(WriteConfigToFile(output, c))
+	err = WriteConfigToFile(output, c)
+	if err != nil {
+		log.Printf("#### Skipping write to file: %s", err)
+	} //
 
 }
 
