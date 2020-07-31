@@ -34,28 +34,22 @@ This command will renew the client cert for a named kubeconfig file and store th
 	Run: func(cmd *cobra.Command, args []string) {
 		kubeconfig, _ := cmd.Flags().GetString("kubeconfig")
 		expire, _ := cmd.Flags().GetInt("expire")
-		root, _ := cmd.Flags().GetString("root")
-		output := kubeconfig
-		if o, _ := cmd.Flags().GetString("output"); o != "" {
-			output = o
-		}
-		cr.RenewKubeconfig(kubeconfig, root, output, expire)
+		caKey, _ := cmd.Flags().GetString("ca-key")
+		caCert, _ := cmd.Flags().GetString("ca-cert")
+		outputdir, _ := cmd.Flags().GetString("outputdir")
+		cr.RenewKubeconfig(kubeconfig, caKey, caCert, outputdir, expire)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(renewCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// renewCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	renewCmd.Flags().String("kubeconfig", "kubelet.conf", "The name of the kubeconfig file to renew certs in")
-	renewCmd.Flags().String("output", "", "The name of the output file to write config to. Defaults to name of kubeconfig file.")
-	renewCmd.Flags().String("root", ".", "The root directory under which the path to the k8s config can be found at etc/kubernetes")
+	renewCmd.Flags().String("kubeconfig", "", "The path to the kubeconfig file to renew certs in (required)")
+	renewCmd.MarkFlagRequired("kubeconfig")
+	renewCmd.Flags().String("outputdir", ".", "The name of the output directory to write config to.")
+	renewCmd.Flags().String("ca-cert", "", "The path to the ca cert file. (required)")
+	renewCmd.MarkFlagRequired("ca-cert")
+	renewCmd.Flags().String("ca-key", "", "The path to the ca key file. (required)")
+	renewCmd.MarkFlagRequired("ca-key")
 	renewCmd.Flags().Int("expire", 12, "The number of months to set the certificate to expire in")
 }
