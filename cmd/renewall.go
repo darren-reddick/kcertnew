@@ -32,16 +32,24 @@ A filesystem root can be set and the command expects the root ca key and cert to
 
 This command will renew the client cert for a named kubeconfig file and store the new config in a new location.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dir, _ := cmd.Flags().GetString("dir")
 		expire, _ := cmd.Flags().GetInt("expire")
-		root, _ := cmd.Flags().GetString("root")
-		cr.RenewKubeconfigs(root, expire)
+		caKey, _ := cmd.Flags().GetString("ca-key")
+		caCert, _ := cmd.Flags().GetString("ca-cert")
+		outputdir, _ := cmd.Flags().GetString("outputdir")
+		cr.RenewKubeconfigs(dir, caKey, caCert, outputdir, expire)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(renewallCmd)
 
-	renewallCmd.Flags().String("output", "", "The name of the output file to write config to. Defaults to name of kubeconfig file.")
-	renewallCmd.Flags().String("root", ".", "The root directory under which the path to the k8s config can be found at etc/kubernetes")
+	renewallCmd.Flags().String("dir", "", "The directory to load kubeconfig files from (required)")
+	renewallCmd.MarkFlagRequired("dir")
+	renewallCmd.Flags().String("outputdir", ".", "The name of the output directory to write config to.")
+	renewallCmd.Flags().String("ca-cert", "", "The path to the ca cert file. (required)")
+	renewallCmd.MarkFlagRequired("ca-cert")
+	renewallCmd.Flags().String("ca-key", "", "The path to the ca key file. (required)")
+	renewallCmd.MarkFlagRequired("ca-key")
 	renewallCmd.Flags().Int("expire", 12, "The number of months to set the certificate to expire in")
 }

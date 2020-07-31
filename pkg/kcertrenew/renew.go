@@ -18,25 +18,22 @@ func check(e error) {
 
 // RenewKubeconfig renews the client cert data of a kubeconfig file
 // by generating a CSR from the expiring cert and signing with the root ca.
-func RenewKubeconfig(kubeconfig string, root string, output string, expire int) {
-	kBase := path.Join(root, "/etc/kubernetes")
+func RenewKubeconfig(kubeconfig string, caKey string, caCert string, outputdir string, expire int) {
 
-	log.Printf("Using kubernetes config base %s", kBase)
+	kubconfigBaseName := path.Base(kubeconfig)
 
-	// Load the kubeconfig from file
-	log.Printf("Loading config from %s", path.Join(kBase, kubeconfig))
-	c, err := LoadKubeConfig(path.Join(kBase, kubeconfig))
+	c, err := LoadKubeConfig(kubeconfig)
 	check(err)
 
 	// Load the CA private key
-	log.Printf("Loading CA private key from %s", path.Join(kBase, "pki/ca.key"))
-	cakey, err := LoadPrivateKeyFromFile(path.Join(kBase, "pki/ca.key"))
+	log.Printf("Loading CA private key from %s", caKey)
+	cakey, err := LoadPrivateKeyFromFile(caKey)
 
 	check(err)
 
 	// Load the CA public cert
-	log.Printf("Loading CA public cert from %s", path.Join(kBase, "pki/ca.crt"))
-	cacert, err := LoadPublicCertFromFile(path.Join(kBase, "pki/ca.crt"))
+	log.Printf("Loading CA public cert from %s", caCert)
+	cacert, err := LoadPublicCertFromFile(caCert)
 
 	check(err)
 
@@ -69,9 +66,13 @@ func RenewKubeconfig(kubeconfig string, root string, output string, expire int) 
 	// Update the ClientCertificateData of the Config with the raw x509 cert data as []byte
 	c = UpdateClientCertConfig(c, clientCRTRaw)
 
+	log.Printf("Expiry date: %s", clientCRTTemplate.NotBefore)
+
 	// Write the updated Config to yaml file
-	log.Printf("Writing updated kubeconfig to %s", output)
-	err = WriteConfigToFile(output, c)
+	out := path.Join(outputdir, kubconfigBaseName)
+	log.Printf("Writing updated kubeconfig to %s", out)
+	log.Printf("Client cert expiry date: %s", clientCRTTemplate.NotBefore)
+	err = WriteConfigToFile(out, c)
 	if err != nil {
 		log.Printf("#### Skipping write to file: %s", err)
 	} //
@@ -80,9 +81,10 @@ func RenewKubeconfig(kubeconfig string, root string, output string, expire int) 
 
 // RenewKubeconfigs renews the client cert data of all kubeconfig files found in a directory
 // by generating a CSR from the expiring cert and signing with the root ca.
-func RenewKubeconfigs(root string, expire int) {
-	kBase := path.Join(root, "/etc/kubernetes")
-	files, err := ioutil.ReadDir(kBase)
+// RenewKubeconfig(kubeconfig string, caKey string, caCert string, outputdir string, expire int)
+func RenewKubeconfigs(dir string, caKey string, caCert string, outputdir string, expire int) {
+	base := path.Join(dir)
+	files, err := ioutil.ReadDir(base)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,7 +98,7 @@ func RenewKubeconfigs(root string, expire int) {
 	}
 	for _, f := range cfiles {
 		log.Printf("Processing %s", f)
-		RenewKubeconfig(f, root, f, expire)
+		RenewKubeconfig(path.Join(base, f), caKey, caCert, outputdir, expire)
 	}
 
 }
